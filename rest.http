@@ -1,0 +1,34 @@
+### get nutrition data
+GET http://localhost:3000/nutrition?ids=3,4,5
+
+### upload user profile data
+POST http://localhost:3000/profil
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "height": 170,
+  "weight": 70,
+  "age": 30,
+  "alergi": "Peanuts"
+}
+
+### update user profile data
+PUT http://localhost:3000/profil/2
+Content-Type: application/json
+
+{
+  "weight": 75,
+  "height": 180,
+  "age": 35,
+  "alergi": "None"
+}
+
+### get user profile data
+GET http://localhost:3000/profil/4
+
+### upload image
+curl -X POST -F "image=@path/to/image.jpg" http://localhost:3000/upload
+
+
+
