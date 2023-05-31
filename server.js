@@ -10,10 +10,10 @@ const port = 3000;
 
 // MySQL connection configuration
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'capstonesql',
-  password: 'password',
-  database: 'capstone'
+  host: '34.128.85.96',
+  user: 'nufochild-sql',
+  password: 'nufochild',
+  database: 'Nufochild-database'
 });
 
 // Middleware to parse JSON input
@@ -30,7 +30,7 @@ app.get('/nutrition', (req, res) => {
   const ids = req.query.ids; // Assuming the input IDs are provided as a comma-separated list in the query parameter "ids"
   const idArray = ids.split(','); // Split the IDs into an array
   
-  const query = `SELECT id, calorie, protein, karbo, fat, fiber FROM Nutrition WHERE id IN (${idArray.map(() => '?').join(',')})`;
+  const query = `SELECT ID, Nama, Protein, Lemak, Karbohidrat, Serat FROM Nutrition_Data WHERE ID IN (${idArray.map(() => '?').join(',')})`;
   
   connection.query(query, idArray, (err, result) => {
     if (err) throw err;
@@ -39,12 +39,12 @@ app.get('/nutrition', (req, res) => {
       res.status(404).json({ error: 'No nutrition information found for the provided IDs' });
     } else {
       const nutritionData = result.map(row => ({
-        id: row.id,
-        calorie: row.calorie,
-        protein: row.protein,
-        karbo: row.karbo,
-        fat: row.fat,
-        fiber: row.fiber
+        ID: row.ID,
+        Nama: row.Nama,
+        Protein: row.Protein,
+        Lemak: row.Lemak,
+        Karbohidrat: row.Karbohidrat,
+        Serat: row.Serat
       }));
       res.json(nutritionData);
     }
