@@ -2,15 +2,18 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
-const { signAccessToken , signRefreshToken } = require('../helper/jwt_helper');
-const validation = require('../helper/user.validation');
-//const user = require('../model/user.model');
+const { 
+  signAccessToken, 
+  signRefreshToken, 
+  verifyRefreshToken 
+} = require('../helper/jwt_helper');
+const client = require('../helpers/init_redis')
 
 const connection = mysql.createConnection({
-  host: '127.0.0.1',
-  user: 'capstonesql',
-  database: 'capstone',
-  password: 'password'
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'capstone'
 });
 connection.connect((err) => {
   if (err) {
@@ -20,33 +23,60 @@ connection.connect((err) => {
   console.log('Connected to MySQL');
 });
 
-router.post('/register', validation.CreateUser, async (req, res, next) => {
-    const { email, password } = req.body;
+router.post("/register", async (req, res) => {
+  let { name, email, password, password2 } = req.body;
 
-  const checkQuery = 'SELECT * FROM users WHERE email = ?';
-  connection.query(checkQuery, [email], (err, rows, fields) => {
-    if (err) {
-      res.status(500).send({ message: err.sqlMessage });
-    } else if (rows.length > 0) {
-      res.status(400).send({ message: 'Email already registered' });
-    } else {
-      bcrypt.hash(password, 10, (err, hash) => {
-        if (err) {
-          res.status(500).send({ message: 'Error hashing password' });
-        } else {
-          const insertQuery = 'INSERT INTO users (email, hash) VALUES (?, ?)';
-          connection.query(insertQuery, [email, hash], (err, rows, fields) => {
-            if (err) {
-              res.status(500).send({ message: err.sqlMessage });
-            } else {
-              const userId = result.insertId;
-              res.send({ message: 'Registration successful' });
-            }
-          });
-        }
-      });
-    }
+  console.log({
+      name,
+      email,
+      password,
+      password2
   });
+
+  let errors = [];
+
+  if (!name || !email || !password || !password2){
+      errors.push({ message: "Please enter all fields" });
+  }
+
+  if (password.length < 6) {
+      errors.push({ message: "Password should be at least 6 characters" });
+  }
+
+  if (password != password2) {
+      errors.push({ message: "Password do not match" });
+  }
+
+  if(errors.length > 0) {
+      res.status(500).send({ errors });
+  }else{
+      let hashedPassword = await bcrypt.hash(password, 10);
+      console.log(hashedPassword);
+
+      await connection.query(
+          `SELECT * FROM users WHERE email = ?`, [email], (err, rows, fields)=>{
+              if (err){
+                res.status(500).send({ message: err.sqlMessage });
+              }
+
+              if(rows.length > 0) {
+                res.status(400).send({ message: 'Email already registered' });
+              }else{
+                connection.query(
+                      `INSERT INTO users (name, email, password)
+                      VALUES (?,?,?)`, [name, email, hashedPassword], 
+                      (err, results)=>{
+                          if (err) {
+                              throw err;
+                          }
+                          console.log(results.rows);
+                          res.status(201).send({message: "You are now registered. Please login"});
+                      }
+                  )
+              }
+          }
+      )
+  }
 });
 
 router.post('/login', async (req, res, next) => {
@@ -61,7 +91,7 @@ router.post('/login', async (req, res, next) => {
       res.status(404).send({ message: 'User not found' });
     } else {
       const user = rows[0];
-      const isPasswordValid = await bcrypt.compare(password, user.hash);
+      const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (isPasswordValid) {
         const accessToken = await signAccessToken(user.id); 
@@ -75,12 +105,33 @@ router.post('/login', async (req, res, next) => {
   });
 });
 
-router.post('/refresh-token', (req, res, next) => {
-  res.send('getting a single product');
+router.post('/refresh-token', async (req, res, next) => {
+  try{
+    const { refreshToken } = req.body
+    if(!refreshToken) throw(err)
+    const userId = await verifyRefreshToken(refreshToken)
+
+    const accessToken = await signAccessToken(userId)
+    const refToken = await signRefreshToken(userId)
+    res.send({accessToken, refToken})
+  }catch(error){
+    next(error)
+  }
+})
+
+router.post('/logout', (req, res) => {
+  const { authorization } = req.headers;
+  if (authorization && authorization.startsWith('Bearer ')) {
+    const token = authorization.split(' ')[1];
+
+    // TODO: Implement token invalidation logic here, e.g., blacklist the token
+
+    res.status(200).send({ message: 'Successfully logged out' });
+  } else {
+    res.status(401).send({ message: 'Unauthorized' });
+  }
 });
 
-router.delete('/logout', (req, res, next) => {
-  res.send('deleting a single product');
-});
+
 
 module.exports = router;

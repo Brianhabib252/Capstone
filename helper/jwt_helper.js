@@ -6,7 +6,7 @@ module.exports = {
             const payload = {}
             const secret = process.env.ACCESS_TOKEN_SECRET
             const option = {
-                expiresIn: '1d',
+                expiresIn: '30d',
                 issuer: 'test.com',
             } 
             JWT.sign(payload, secret, option, (err, token) => {
@@ -16,7 +16,7 @@ module.exports = {
         })
     },
     verifyAccessToken: (req, res, next) => {
-        if (!req.headers['authorization']) return next(createError.Unauthorized())
+        if (!req.headers['authorization']) return res.status(401).json({ message: 'No token provided' });
         const authHeader = req.headers['authorization']
         const bearerToken = authHeader.split(' ')
         const token = bearerToken[1]
@@ -44,4 +44,13 @@ module.exports = {
             })
         })
     },
+
+    verifyRefreshToken: (refreshToken) =>{
+        JWT.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, payload) =>{
+            if(err) return reject(err)
+            const userId  = payload.aud
+
+            resolve(userId)
+        })
+    }
 }
