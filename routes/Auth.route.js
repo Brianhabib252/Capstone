@@ -5,9 +5,9 @@ const bcrypt = require('bcrypt');
 const { 
   signAccessToken, 
   signRefreshToken, 
-  verifyRefreshToken 
+  verifyRefreshToken, 
+  verifyAccessToken
 } = require('../helper/jwt_helper');
-const client = require('../helpers/init_redis')
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -88,7 +88,7 @@ router.post('/login', async (req, res, next) => {
     if (err) {
       res.status(500).send({ message: err.sqlMessage });
     } else if (rows.length === 0) {
-      res.status(404).send({ message: 'User not found' });
+      res.status(404).send({ message: 'User or Password not Correct' });
     } else {
       const user = rows[0];
       const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -99,7 +99,7 @@ router.post('/login', async (req, res, next) => {
 
     res.send({ accessToken, refreshToken })
       } else {
-        res.status(401).send({ message: 'Invalid password' });
+        res.status(401).send({ message: 'User or Password not Correct' });
       }
     }
   });
@@ -119,17 +119,9 @@ router.post('/refresh-token', async (req, res, next) => {
   }
 })
 
-router.post('/logout', (req, res) => {
-  const { authorization } = req.headers;
-  if (authorization && authorization.startsWith('Bearer ')) {
-    const token = authorization.split(' ')[1];
+router.post('/logout', verifyAccessToken, (req, res) => {
 
-    // TODO: Implement token invalidation logic here, e.g., blacklist the token
-
-    res.status(200).send({ message: 'Successfully logged out' });
-  } else {
-    res.status(401).send({ message: 'Unauthorized' });
-  }
+  res.status(200).send({ message: 'Logout successful' });
 });
 
 
