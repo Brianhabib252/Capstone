@@ -124,6 +124,11 @@ router.post('/logout', verifyAccessToken, (req, res) => {
   res.status(200).send({ message: 'Logout successful' });
 });
 
+router.get('/protected-route', verifyAccessToken, (req, res) => {
+  const userId = req.payload; // Access the user ID from the request object
+  // Use the user ID as needed
+  res.send(user);
 
+});
 
 module.exports = router;
