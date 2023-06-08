@@ -1,35 +1,45 @@
 const JWT = require ('jsonwebtoken')
 
 module.exports = {
-    signAccessToken: (userId) => {
-        return new Promise((resolve, reject) => {
-            const payload = {}
-            const secret = process.env.ACCESS_TOKEN_SECRET
-            const option = {
-                expiresIn: '1d',
-                issuer: 'test.com',
-            } 
-            JWT.sign(payload, secret, option, (err, token) => {
-                if (err) reject (err)
-                resolve (token)
-            })
-        })
-    },
-    verifyAccessToken: (req, res, next) => {
-        if (!req.headers['authorization']) return next(createError.Unauthorized())
-        const authHeader = req.headers['authorization']
-        const bearerToken = authHeader.split(' ')
-        const token = bearerToken[1]
+  signAccessToken: (userId, name) => {
+    return new Promise((resolve, reject) => {
+        const payload = {
+            userId: userId,
+            name: name
+        };
+        const secret = process.env.ACCESS_TOKEN_SECRET;
+        const options = {
+            expiresIn: '30d',
+        }; 
+        JWT.sign(payload, secret, options, (err, token) => {
+            if (err) reject(err);
+            resolve(token);
+        });
+    });
+},
+      verifyAccessToken: (req, res, next) => {
+        const token = req.headers['authorization']?.split(' ')[1];
+      
+        if (!token) {
+          return res.status(401).json({ message: 'No token provided' });
+        }
+      
         JWT.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
           if (err) {
-            const message =
-              err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message
-            return next(createError.Unauthorized(message))
+            const message = err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
+            return res.status(401).json({ message });
           }
-          req.payload = payload
-          next()
-        })
-    },
+      
+          // Check token expiration
+          const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds
+          if (payload.exp <= currentTime) {
+            return res.status(401).json({ message: 'Token has expired' });
+          }
+      
+          req.payload = payload;
+          next();
+        });
+      },
     signRefreshToken: (userId) => {
         return new Promise((resolve, reject) => {
             const payload = {}
@@ -44,4 +54,13 @@ module.exports = {
             })
         })
     },
+
+    verifyRefreshToken: (refreshToken) =>{
+        JWT.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, payload) =>{
+            if(err) return reject(err)
+            const userId  = payload.aud
+
+            resolve(userId)
+        })
+    }
 }
