@@ -124,6 +124,8 @@ app.post('/upload', upload.single('image'), ImgUpload.uploadToGcs, (req, res) =>
   }
 });
 
-app.listen(3000, () => {
-    console.log('Server serving in port 3000')
-})
+const port = process.env.PORT || 8080;
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
