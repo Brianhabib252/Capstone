@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql');
+const createConnection = require('../helper/init_mysql')
 const bcrypt = require('bcrypt');
 const { 
   signAccessToken, 
@@ -9,12 +9,7 @@ const {
   verifyAccessToken
 } = require('../helper/jwt_helper');
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'capstone'
-});
+const connection = createConnection();
 connection.connect((err) => {
   if (err) {
     console.error('Error connecting to MySQL:', err.message);
@@ -94,16 +89,20 @@ router.post('/login', async (req, res, next) => {
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (isPasswordValid) {
-        const accessToken = await signAccessToken(user.id); 
-        const refreshToken = await signRefreshToken(user.id)
-
-    res.send({ accessToken, refreshToken })
+        try {
+          const accessToken = await signAccessToken(user.id, user.name); 
+          const refreshToken = await signRefreshToken(user.id);
+          res.send({ accessToken, refreshToken });
+        } catch (error) {
+          res.status(500).send({ message: 'Token signing failed' });
+        }
       } else {
         res.status(401).send({ message: 'User or Password not Correct' });
       }
     }
   });
 });
+
 
 router.post('/refresh-token', async (req, res, next) => {
   try{
@@ -124,10 +123,10 @@ router.post('/logout', verifyAccessToken, (req, res) => {
   res.status(200).send({ message: 'Logout successful' });
 });
 
-router.get('/protected-route', verifyAccessToken, (req, res) => {
-  const userId = req.payload; // Access the user ID from the request object
+router.get('/id', verifyAccessToken, (req, res) => {
+  const {userId, name} = req.payload; // Access the user ID from the request object
   // Use the user ID as needed
-  res.send(user);
+  res.send({userId, name});
 
 });
 
