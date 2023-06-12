@@ -52,13 +52,13 @@ app.get('/nutrition', (req, res) => {
     const ids = req.query.ids; // Assuming the input IDs are provided as a comma-separated list in the query parameter "ids"
     const idArray = ids.split(','); // Split the IDs into an array
     
-    const query = `SELECT ID, Nama, Protein, Lemak, Karbohidrat, Serat FROM Nutrition_Data WHERE ID IN (${idArray.map(() => '?').join(',')})`;
+    const query = `SELECT ID, Nama, Protein, Lemak, Karbohidrat, Serat FROM Nutrition_Data WHERE Nama IN (${idArray.map(() => '?').join(',')})`;
     
     connection.query(query, idArray, (err, result) => {
       if (err) throw err;
   
       if (result.length === 0) {
-        res.status(404).json({ error: 'No nutrition information found for the provided IDs' });
+        res.status(404).json({ error: 'No nutrition information found for the provided Food' });
       } else {
         const nutritionData = result.map(row => ({
           ID: row.ID,
@@ -124,6 +124,8 @@ app.post('/upload', upload.single('image'), ImgUpload.uploadToGcs, (req, res) =>
   }
 });
 
-app.listen(3000, () => {
-    console.log('Server serving in port 3000')
-})
+const port = process.env.PORT || 8080;
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
