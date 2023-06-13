@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const createConnection = require('../helper/init_mysql')
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 const { 
   signAccessToken, 
   signRefreshToken, 
@@ -18,6 +19,8 @@ connection.connect((err) => {
   console.log('Connected to MySQL');
 });
 
+
+// API endpoint to register users
 router.post("/register", async (req, res) => {
   let { name, email, password, password2 } = req.body;
 
@@ -58,14 +61,15 @@ router.post("/register", async (req, res) => {
                 res.status(400).send({ message: 'Email already registered' });
               }else{
                 connection.query(
-                      `INSERT INTO users (name, email, password)
-                      VALUES (?,?,?)`, [name, email, hashedPassword], 
-                      (err, results)=>{
-                          if (err) {
-                              throw err;
-                          }
-                          console.log(results.rows);
-                          res.status(201).send({message: "You are now registered. Please login"});
+                  `INSERT INTO users (id, name, email, password)
+                  VALUES (?,?,?,?)`,
+                  [uuidv4(), name, email, hashedPassword],
+                  (err, results) => {
+                    if (err) {
+                      throw err;
+                    }
+                    console.log(results.rows);
+                    res.status(201).send({ message: "You are now registered. Please login" });
                       }
                   )
               }
@@ -74,6 +78,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
+
+// API endpoint to users login
 router.post('/login', async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -104,6 +110,7 @@ router.post('/login', async (req, res, next) => {
 });
 
 
+//// API endpoint to get refresh token
 router.post('/refresh-token', async (req, res, next) => {
   try{
     const { refreshToken } = req.body
@@ -118,6 +125,8 @@ router.post('/refresh-token', async (req, res, next) => {
   }
 })
 
+
+// API endpoint to logout
 router.post('/logout', verifyAccessToken, (req, res) => {
 
   res.status(200).send({ message: 'Logout successful' });

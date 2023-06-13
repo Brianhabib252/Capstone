@@ -17,6 +17,8 @@ const {
     console.log('Connected to MySQL');
   });
 
+
+  // API endpoint to store profile data
   router.post('/', verifyAccessToken, (req, res) => {
     const { height, weight, age, gender } = req.body;
     const { userId, name } = req.payload; // Mengakses id dan name dari payload JWT
@@ -30,6 +32,8 @@ const {
       gender
     };
   
+
+    // API endpoint to update profile data
     const query = 'INSERT INTO profil SET ?';
   
     connection.query(query, profile, (err, result) => {
@@ -71,6 +75,8 @@ const {
     });
   });
 
+
+  // API endpoint to get profile data
   router.get('/', verifyAccessToken, (req, res) => {
     const { userId } = req.payload;
   
