@@ -4,19 +4,19 @@ Welcome to our Nufochild API
 ## What you need
 1. Cloud Environment: Google Cloud Platform (Cloud Run, Cloud Storage, Cloud SQL)
 2. Programming Language: Node js, Python
-3. Web Server: Express and Flask API
+3. Web Server: Express and Fast-api
 4. Server: Cloud Run
 
 # How to setup Locally
 1. clone the project first
-2. checkout to branch `develop-cc` 
+2. checkout to branch `main` 
 3. install node js (>18.5 or latest) and npm (>9.7 or latest)
 4. install python3 (>3.7 or latest) and pip (>18.1 or latest)
 5. install my sql server (>8.0 or latest)
 6. install package with `npm install` in Database API
 7. install requirement.txt with `pip install -r requirement.txt` in ML API
-8. run `app.py` for running the API script with `py app.py` or `flask run`
-9. open the link from Flask with `Postman` and change method to `POST` with the Endpoint of the ML API
+8. run `main.py` for running the API script with `main.py`
+9. open the link from Fast-api with `Postman` and change method to `POST` with the Endpoint of the ML API
 10. Connect MYSQL Server to Database API with modifyng the host, user, password, database in file .env
 11. Connect Cloud Storage to database API with adding path to service account credential in file app.js
 11. Connect ML API to database API with adding the ML Server Url in /upload endpoint in file app.js
