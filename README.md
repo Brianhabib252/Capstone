@@ -1,6 +1,8 @@
 # Cloud Computing Nufochild API
 Welcome to our Nufochild API
 
+![Cloud Architecture](https://github.com/Brianhabib252/Capstone/assets/128448072/dbd4d04f-2e9c-4e1a-9cb7-4565c7ed1c80)
+
 ## What you need
 1. Cloud Environment: Google Cloud Platform (Cloud Run, Cloud Storage, Cloud SQL)
 2. Programming Language: Node js, Python
